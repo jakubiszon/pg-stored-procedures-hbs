@@ -1,0 +1,16 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "example.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "json2src": "git+https://github.com/jakubiszon/json2src.git",
+    "table2json": "git+https://github.com/jakubiszon/table2json.git"
+  }
+}

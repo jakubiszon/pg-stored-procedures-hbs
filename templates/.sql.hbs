@@ -1,0 +1,209 @@
+{{!---
+
+	the insert only requires minimal number of columns
+	removing "is_nullable=false" condition will include all columns without a default
+
+---}}
+create or replace function {{tablename}}_insert (
+{{#each ($filter columns is_default_or_identity=false is_nullable=false)}}
+{{#if @first}}
+	_{{column_name}} {{table_schema}}.{{../tablename}}.{{column_name}}%type
+{{else}}
+,	_{{column_name}} {{table_schema}}.{{../tablename}}.{{column_name}}%type
+{{/if}}
+{{/each}}
+) returns {{table_schema}}.{{tablename}} as
+$$
+	insert into {{table_schema}}.{{tablename}} (
+	{{#each ($filter columns is_default_or_identity=false is_nullable=false)}}
+	{{#if @first}}
+		{{column_name}}
+	{{else}}
+	,	{{column_name}}
+	{{/if}}
+	{{/each}}
+	) values (
+	{{#each ($filter columns is_default_or_identity=false is_nullable=false)}}
+	{{#if @first}}
+		_{{column_name}}
+	{{else}}
+	,	_{{column_name}}
+	{{/if}}
+	{{/each}}
+	) returning *;
+$$ language sql;
+
+
+/*---------------------------------------------------------------------------------------*/
+{{!---
+
+	Here we simply list and return all instances
+
+---}}
+create or replace function {{tablename}}_list ()
+returns setof {{table_schema}}.{{tablename}} as
+$$
+	select *
+	from {{table_schema}}.{{tablename}};
+$$ language sql;
+
+
+{{#if primary_key_name}}
+/*---------------------------------------------------------------------------------------*/
+{{!---
+
+	example_get - returns a single record referenced by the primary key
+
+---}}
+create or replace function {{tablename}}_get (
+{{#each ($filter columns is_primary_key=true)}}
+{{#if @first}}
+	_{{column_name}} {{table_schema}}.{{../tablename}}.{{column_name}}%type
+{{else}}
+,	_{{column_name}} {{table_schema}}.{{../tablename}}.{{column_name}}%type
+{{/if}}
+{{/each}}
+) returns setof {{table_schema}}.{{tablename}} as
+$$
+	select *
+	from {{table_schema}}.{{tablename}}
+	{{#each ($filter columns is_primary_key=true)}}
+	{{#if @first}}
+	where {{column_name}} = _{{column_name}}
+	{{else}}
+	and {{column_name}} = _{{column_name}}
+	{{/if}}
+	{{/each}}
+$$ language sql;
+
+
+/*---------------------------------------------------------------------------------------*/
+{{!--
+
+	example_update - updates a single record referenced by the primary key
+
+--}}
+create or replace function {{tablename}}_update (
+{{#each columns}}
+{{#if @first}}
+	_{{column_name}} {{table_schema}}.{{../tablename}}.{{column_name}}%type
+{{else}}
+,	_{{column_name}} {{table_schema}}.{{../tablename}}.{{column_name}}%type
+{{/if}}
+{{/each}}
+) returns setof {{table_schema}}.{{tablename}} as
+$$
+	{{!-- update set --}}
+	update {{table_schema}}.{{tablename}} set
+	{{#each ($filter columns is_primary_key=false)}}
+	{{#if @first}}
+		{{column_name}} = _{{column_name}}
+	{{else}}
+	,	{{column_name}} = _{{column_name}}
+	{{/if}}
+	{{/each}}
+	{{!-- where --}}
+	{{#each ($filter columns is_primary_key=true)}}
+	{{#if @first}}
+	where {{column_name}} = _{{column_name}}
+	{{else}}
+	and {{column_name}} = _{{column_name}}
+	{{/if}}
+	{{/each}}
+	returning *;
+$$ language sql;
+
+
+/*---------------------------------------------------------------------------------------*/
+{{!--
+
+	example_delete - removes a single record referenced by the primary key
+
+--}}
+create or replace function {{tablename}}_delete (
+{{#each ($filter columns is_primary_key=true)}}
+{{#if @first}}
+	_{{column_name}} {{table_schema}}.{{../tablename}}.{{column_name}}%type
+{{else}}
+,	_{{column_name}} {{table_schema}}.{{../tablename}}.{{column_name}}%type
+{{/if}}
+{{/each}}
+) returns void as
+$$
+	delete from {{table_schema}}.{{tablename}}
+	{{#each ($filter columns is_primary_key=true)}}
+	{{#if @first}}
+	where {{column_name}} = _{{column_name}}
+	{{else}}
+	and {{column_name}} = _{{column_name}}
+	{{/if}}
+	{{/each}}
+$$ language sql;
+{{/if}}{{!-- this ends the if for "primary key" functions --}}
+
+{{#each foreignkeys}}
+/*---------------------------------------------------------------------------------------*/
+{{!--
+
+	example_list_by_fk - lists records referencing the specified foreign key
+
+--}}
+create or replace function {{../tablename}}_list_by_{{tablename}} (
+{{#each columns}}
+{{#unless @first}},{{/unless}}	_{{this}} {{../../table_schema}}.{{../../tablename}}.{{this}}%type
+{{/each}}
+) returns setof {{../table_schema}}.{{../tablename}} as
+$$
+	select *
+	from {{../table_schema}}.{{../tablename}}
+	{{#each columns}}
+	{{#if @first}}where{{else}}and{{/if}} {{this}} = _{{this}}{{#if @last}};{{/if}}
+	{{/each}}
+$$ language sql;
+
+
+{{/each}}
+{{#each foreignkeys}}
+/*---------------------------------------------------------------------------------------*/
+{{!--
+
+	example_delete_by_fk - deletes records referencing the specified foreign key
+
+--}}
+create or replace function {{../tablename}}_delete_by_{{tablename}} (
+{{#each columns}}
+{{#unless @first}},{{/unless}}	_{{this}} {{../../table_schema}}.{{../../tablename}}.{{this}}%type
+{{/each}}
+) returns void as
+$$
+	delete
+	from {{../table_schema}}.{{../tablename}}
+	{{#each columns}}
+	{{#if @first}}where{{else}}and{{/if}} {{this}} = _{{this}}{{#if @last}};{{/if}}
+	{{/each}}
+$$ language sql;
+
+
+{{/each}}
+/*---------------------------------------------------------------------------------------*/
+{{#each uniquekeys}}
+{{!--
+
+	example_find_by_unique_key - selects a single record by the unique key
+
+--}}
+create or replace function {{../tablename}}_find_by_{{this}} (
+{{#each columns}}
+{{#unless @first}},{{/unless}}	_{{this}} {{../../table_schema}}.{{../../tablename}}.{{this}}%type
+{{/each}}
+) returns setof {{../table_schema}}.{{../tablename}} as
+$$
+	select *
+	from {{../table_schema}}.{{../tablename}}
+	{{#each columns}}
+	{{#if @first}}where{{else}}and{{/if}} {{this}} = _{{this}}{{#if @last}};{{/if}}
+	{{/each}}
+$$ language sql;
+
+
+{{/each}}
