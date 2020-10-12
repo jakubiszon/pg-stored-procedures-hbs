@@ -1,7 +1,7 @@
 {
 	"host":"localhost",
 	"port":5432,
-	"database":"dictionary",
-	"password":"a",
-	"user":"dict_data"
+	"database":"xxxxxxxxxxx",
+	"password":"xxxxxxxxxxx",
+	"user":"xxxxxxxxxxx"
 }
