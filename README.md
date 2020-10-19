@@ -10,7 +10,7 @@ The procedures created by this template:
  - update - updates one row matched by the primary key
  - delete - deletes one row matched by the primary key
  - list by FK - lists all rows which reference the specified foreign key, one procedure is generated for each FK
- - delete by KF - deletes all rows which reference the specified foreign key, one procedure is generated for each FK
+ - delete by FK - deletes all rows which reference the specified foreign key, one procedure is generated for each FK
  - find by unique key - a procedure finding a row specified by the unique key, one for each key
 
 ## Usage
