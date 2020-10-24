@@ -148,7 +148,7 @@ $$ language sql;
 	example_list_by_fk - lists records referencing the specified foreign key
 
 --}}
-create or replace function {{../tablename}}_list_by_{{tablename}} (
+create or replace function {{../tablename}}_list_by_{{keytablename}} (
 {{#each columns}}
 {{#unless @first}},{{/unless}}	_{{this}} {{../../table_schema}}.{{../../tablename}}.{{this}}%type
 {{/each}}
@@ -170,7 +170,7 @@ $$ language sql;
 	example_delete_by_fk - deletes records referencing the specified foreign key
 
 --}}
-create or replace function {{../tablename}}_delete_by_{{tablename}} (
+create or replace function {{../tablename}}_delete_by_{{keytablename}} (
 {{#each columns}}
 {{#unless @first}},{{/unless}}	_{{this}} {{../../table_schema}}.{{../../tablename}}.{{this}}%type
 {{/each}}
@@ -192,7 +192,7 @@ $$ language sql;
 	example_find_by_unique_key - selects a single record by the unique key
 
 --}}
-create or replace function {{../tablename}}_find_by_{{this}} (
+create or replace function {{../tablename}}_find_by_{{this.keyname}} (
 {{#each columns}}
 {{#unless @first}},{{/unless}}	_{{this}} {{../../table_schema}}.{{../../tablename}}.{{this}}%type
 {{/each}}
